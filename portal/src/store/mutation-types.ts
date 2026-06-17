@@ -1,0 +1,15 @@
+export const SET_MENU_COLLAPSE = `SET_MENU_COLLAPSE`; // menuCollapse
+export const SET_USER_INFO = `SET_USER_INFO`; // 储存用户信息
+export const SET_TOKEN_INFO = `SET_TOKEN_INFO`; // 储存token info
+export const SET_SYS_PATH = `SET_SYS_PATH`;
+export const SET_PROWER_ALIAS_TREE = `SET_PROWER_ALIAS_TREE`;
+export const SET_PROWER_LIST = `SET_PROWER_LIST`;
+export const SET_ROTURE_LIST = `SET_ROTURE_LIST`;
+export const SET_LOGIN_SHOW = `SET_LOGIN_SHOW`;
+export const SET_LOGIN_TO_PATH = `SET_LOGIN_TO_PATH`;
+export const SET_PAGES_INFO_STROE = `SET_PAGES_INFO_STROE`;
+export const CLEAR_PAGES_INFO_STROE = `CLEAR_PAGES_INFO_STROE`;
+export const SET_APP_LIST_DATA = `SET_APP_LIST_DATA`;
+export const SET_SCREEN_CHANGE = `SET_SCREEN_CHANGE`;
+export const SET_IS_JI_ZAI_USER = `SET_IS_JI_ZAI_USER`;
+export const SET_CHANGE_PASSWORD_SHOW = `SET_CHANGE_PASSWORD_SHOW`; // 控制修改密码对话框显示

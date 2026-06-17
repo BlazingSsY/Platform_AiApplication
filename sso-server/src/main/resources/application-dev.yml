@@ -1,0 +1,67 @@
+#=================================================================================
+# 容器相关设置
+server:
+  port: ${SSO_SERVER_PORT:9091}
+  servlet:
+    context-path: /sso
+  tomcat:
+    max-connections: 10000
+    max-threads: 200
+    min-spare-threads: 200
+  connection-timeout: 5000ms
+
+
+logging:
+  level:
+    root: INFO
+    com.starmol.sso: DEBUG
+  pattern:
+    console: '[%thread] %d{yyyy-MM-dd HH:mm:ss} [%X{RequestId}]  %-5level %logger{36} - %msg%n'
+#=================================================================================
+# spring 组件相关设置
+spring:
+  redis:
+    database: ${SSO_REDIS_DATABASE:0}
+    port: ${SSO_REDIS_PORT:6379}
+    host: ${SSO_REDIS_HOST:100.64.0.3}
+    password: ${SSO_REDIS_PASSWORD:123456}
+    timeout: 10000ms
+    lettuce:
+      pool:
+        max-active: ${SSO_REDIS_ACTIVE:100}
+        max-idle: ${SSO_REDIS_MAX_IDLE:50}
+        min-idle: ${SSO_REDIS_MIN_IDLE:10}
+        max-wait: 2000ms
+
+# actuator
+management:
+  server:
+    port: 19091
+
+#=================================================================================
+# 其他辅助框架相关配置
+
+#=================================================================================
+# 自定义参数相关配置
+sso:
+  oauth:
+    error-uri-msg: "auth api error."
+    # 用于 token 前缀，表名是哪个节点服务生成的 token
+    node-number: ${SSO_NODE_NUMBER:10}
+    tgc-cookie-secure: false
+    remember-me-max-time-to-live-in-seconds: 604800
+    code-max-time-to-live-in-seconds: ${SSO_CODE_LIVE_IN_SECONDS:120}
+    access-token-max-time-to-live-in-seconds: ${SSO_ACCESS_TOKEN_LIVE_SECONDS:43200}
+    refresh-token-max-time-to-live-in-seconds: ${SSO_REFRESH_TOKEN_LIVE_SECONDS:86400}
+    tgc-and-user-info-max-time-to-live-in-seconds: ${SSO_TGC_LIVE_IN_SECONDS:86400}
+    management-url: ${SSO_MANAGEMENT_URL:http://127.0.0.1:8001/user-service/v1}
+    token-sign-key: ${SSO_TOKEN_SIGN_KEY:air_secretKey}
+#=================================================================================
+
+feign:
+  client:
+    config:
+      management-client:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: ${SSO_FEIGN_LOGGER_LEVEL:FULL}

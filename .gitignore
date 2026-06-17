@@ -1,0 +1,8 @@
+.env.docker
+docker-data/
+
+**/target/
+**/node_modules/
+**/dist/
+**/logs/
+*.log

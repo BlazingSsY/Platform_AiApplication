@@ -1,0 +1,168 @@
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: daip-postgres
+    env_file:
+      - .env.docker
+    ports:
+      - "15432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: daip-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:RELEASE.2024-06-13T22-53-53Z
+    container_name: daip-minio
+    env_file:
+      - .env.docker
+    command: ["server", "/data", "--console-address", ":9001"]
+    ports:
+      - "19000:9000"
+      - "19001:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  portal-backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+      args:
+        MODULE: portal-backend
+    container_name: daip-portal-backend
+    env_file:
+      - .env.docker
+    environment:
+      SERVER_PORT: 8011
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+
+  circuit-review-backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+      args:
+        MODULE: circuit-review-backend
+    container_name: daip-circuit-review-backend
+    env_file:
+      - .env.docker
+    environment:
+      SERVER_PORT: 8012
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      portal-backend:
+        condition: service_started
+    restart: unless-stopped
+
+  sourcecode-review-backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+      args:
+        MODULE: sourcecode-review-backend
+    container_name: daip-sourcecode-review-backend
+    env_file:
+      - .env.docker
+    environment:
+      SERVER_PORT: 8013
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      portal-backend:
+        condition: service_started
+    restart: unless-stopped
+
+  logical-review-backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+      args:
+        MODULE: logical-review-backend
+    container_name: daip-logical-review-backend
+    env_file:
+      - .env.docker
+    environment:
+      SERVER_PORT: 8014
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      portal-backend:
+        condition: service_started
+    restart: unless-stopped
+
+  sso-server:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+      args:
+        MODULE: sso-server
+    container_name: daip-sso-server
+    env_file:
+      - .env.docker
+    depends_on:
+      redis:
+        condition: service_healthy
+      portal-backend:
+        condition: service_started
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+    container_name: daip-gateway
+    ports:
+      - "8080:80"
+    depends_on:
+      portal-backend:
+        condition: service_started
+      circuit-review-backend:
+        condition: service_started
+      sourcecode-review-backend:
+        condition: service_started
+      logical-review-backend:
+        condition: service_started
+      sso-server:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  redis-data:
+  minio-data:

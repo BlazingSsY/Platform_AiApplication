@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>统一认证中心</title>
+    <link href="./css/login.css" rel="stylesheet" th:href="@{/css/login.css}">
+    <link href="./favicon.ico" rel="shortcut icon" th:href="@{/favicon.ico}">
+</head>
+
+<body>
+
+<div class="login-wrapper">
+    <header class="header">
+        统一认证中心
+    </header>
+    <div class="content-right">
+        <div class="right-header">
+            <h1 class="right-header-h2">
+                欢迎登录
+            </h1>
+        </div>
+        <div class="right-form-wrapper">
+            <img alt="" class="litterPeo" src="../images/litterPeo.png"/>
+            <form method="POST" onclick="this.disabled=false"
+                  th:action="${#request.getQueryString() != null ? #request.getRequestURL() + '?' + #request.getQueryString() : #request.getRequestURL()}">
+                <div class="username-wrapper">
+                    <input class="username username-input-default" id="username" name="username"
+                           onfocus="usernameInputFocus()" placeholder="请输入用户名" type="text">
+                    <p class="username-error opacity0" th:text="${errorMsg}"></p>
+                </div>
+
+                <div class="password-wrapper">
+                    <input class="password password-input-default" id="password" name="password"
+                           onfocus="passwordInputFocus()" placeholder="请输入密码" type="password">
+                    <p class="password-error opacity0">密码为必填项</p>
+                </div>
+
+<!--                <div>-->
+<!--                    <img alt="" class="captcha-img" id="captcha_img" onclick="changeCaptcha();" th:src="@{/oauth/captcha}"/>-->
+<!--                    <input class="captcha-input-default" id="captcha" name="captcha" placeholder="验证码" type="text">-->
+<!--                </div>-->
+
+<!--                <div class="checkMe">-->
+<!--                        <span>-->
+<!--                            <input id="bool_is_remember_me" name="bool_is_remember_me" type="checkbox" value="false">-->
+<!--                            <label class="ml5" for="bool_is_remember_me">记住我</label>-->
+<!--                        </span>-->
+<!--                </div>-->
+
+                <div class="submit-btn-wrapper">
+                    <img alt="" class="btn-loading" th:src="@{/images/loading.svg}">
+                    <button class="submit-btn" onclick="handleSubmit()" type="submit">登录</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="loginFoot"></div>
+    <div class="start"></div>
+    <div class="mask" th:if="${userAttribute?.passwordExpired}"></div>
+    <div class="changePass" th:if="${userAttribute?.passwordExpired}">
+        <div class="changePassTitle">请修改密码</div>
+        <form method="POST" onclick="this.disabled=false"
+              th:action="${#request.getQueryString() != null ? #request.getRequestURL() + '?' + #request.getQueryString() : #request.getRequestURL()}">
+            <div class="username-wrapper wrapper">
+                <input class="username2 username-input-default" id="update_username" name="username" placeholder="请输入用户名"
+                       th:value="${userAttribute?.username}" type="text">
+                <p class="username-error opacity0"></p>
+            </div>
+
+            <div class="password-wrapper wrapper">
+                <input class="password2 password-input-default" id="update_old_password" name="old_password" placeholder="请输入密码"
+                       th:value="${userAttribute?.password}" type="password">
+                <p class="username-error opacity0"></p>
+            </div>
+
+            <div class="newest-wrapper wrapper">
+                <input class="newest newest-input-default" id="newest" name="password" placeholder="请输入新密码"
+                       type="password">
+                <p class="newest-error opacity0">密码为必填项</p>
+            </div>
+
+            <div>
+                <input class="newest newest-input-default" hidden="hidden" id="bool_is_update_pwd" name="bool_is_update_pwd" value="true">
+            </div>
+
+            <p class="username-error opacity0" th:text="${errorMsg}"></p>
+            <div class="submit-btn-wrapper">
+                <img alt="" class="btn-loading2" th:src="@{/images/loading.svg}">
+                <button class="submit-btn2" onclick="changePass()" type="submit">确定</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+<script src="./js/login.js" th:src="@{/js/login.js}" type="application/javascript"></script>
+<script src="./js/md5.min.js" th:src="@{/js/md5.min.js}" type="application/javascript"></script>
+
+</html>
