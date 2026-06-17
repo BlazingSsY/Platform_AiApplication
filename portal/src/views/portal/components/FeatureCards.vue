@@ -131,6 +131,7 @@ import { useRouter } from "vue-router"
 import { designFeatures as designData, productionFeatures as productionData, managementFeatures as managementData, computingFeatures as computingData } from "@/Data/featureConstants"
 import { links, demoHost } from "@/Data/constants"
 import store from "@/store/index"
+import { openApplication } from '@/utils/openApplication'
 import bglr from '../../../assets/images/bglr.png';
 import circuitHover from '@/assets/images/circuit-hover.png';
 import codeHover from '@/assets/images/code-review-hover.png';
@@ -219,19 +220,9 @@ watch(()=>applicationsListData.value,val=>{
 // 使用ref包装导入的数据以保持响应式
 const handleCardClick = item => {
 
-  if(item.status===1){ 
-    if (item.url && (item.url.startsWith('http://') || item.url.startsWith('https://'))) {
-      window.open(item.url, '_blank');
-    } else {
-      if (loginName.value) {
-        router.push({
-          path:item.url
-        })
-      } else {
-        store.commit(`SET_LOGIN_SHOW`, true, item.router)
-        store.commit(`SET_LOGIN_TO_PATH`, item.router)
-      }
-    }
+  if(item.status===1){
+    // 统一跳转：http(s)/反代路径新标签打开；站内路由 router.push；未登录弹登录框
+    openApplication(item)
   }else{
     // 跳转详情
     // router.push({

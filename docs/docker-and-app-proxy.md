@@ -125,28 +125,18 @@ REVIEW_SERVICE_URL=host.docker.internal:38080
 docker compose up -d postgres redis minio
 ```
 
-### 3. 初始化数据库
+### 3. 数据库初始化（已自动，无需手动）
 
-当前代码里的 DDL 自动执行配置是注释状态，且各模块根目录的 `init.sql` 包含 `DROP TABLE IF EXISTS`。因此不建议在 Compose 中自动挂载执行，避免误删已有数据。
+数据库**自动初始化**，不再需要手动导入。`docker-compose.yml` 把合并基线 `docker/db/init.sql` 挂载到 PostgreSQL 官方镜像的 `/docker-entrypoint-initdb.d/` 目录：
 
-首次空库可以手工导入：
+- **数据卷为空（首次）**：postgres 启动时自动执行该脚本，一次建好全部表结构 + 初始数据 + 内置应用；
+- **数据卷已有数据（重启 / stop-start）**：自动跳过，数据原样保留，不会重复执行、不会清库。
 
-```bash
-docker compose exec -T postgres psql -U postgres -d dlsc < portal-backend/init.sql
-docker compose exec -T postgres psql -U postgres -d dlsc < circuit-review-backend/init.sql
-docker compose exec -T postgres psql -U postgres -d dlsc < sourcecode-review-backend/init.sql
-docker compose exec -T postgres psql -U postgres -d dlsc < logical-review-backend/init.sql
-```
+所以第 2 步 `docker compose up -d postgres` 起来时，初始化就已经完成了。
 
-Windows PowerShell 中 `< file.sql` 对外部命令重定向有时不稳定，可以用：
+> 历史说明：早期是各模块根目录 4 个 `init.sql` + 一堆 `db/migration` 脚本手动导入，且自动迁移机制被注释关闭，导致 schema 漂移、反复报错。现已合并固化为单一、PG 合法、可重复导入的 `docker/db/init.sql`（由修好的库 `pg_dump` 生成）。原 4 个 `init.sql` 和 `db/migration` 运行时已不再使用，仅留作历史参考；**以后改表结构改 `docker/db/init.sql`**。
 
-```powershell
-Get-Content .\portal-backend\init.sql | docker compose exec -T postgres psql -U postgres -d dlsc
-```
-
-其余 SQL 同理。
-
-已有生产数据时，不要直接执行这些 `init.sql`。应先备份数据库，再只执行确认需要的增量 SQL。
+如需重置数据库（仅测试环境）：`docker compose down -v` 删除数据卷，下次启动会用基线重新初始化。
 
 ### 4. 构建并启动全部服务
 

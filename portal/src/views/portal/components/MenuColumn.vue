@@ -113,6 +113,7 @@ import { links, demoHost } from "@/Data/constants"
 import homeW from "@/assets/images/homeW.png"
 import homeB from "@/assets/images/homeB.png"
 import store from "@/store/index"
+import { openApplication } from '@/utils/openApplication'
 const roleInfo = computed(() => userInfo.value?.role)
 const userInfo = computed(() => store.state.user.userInfo)
 const loginName = computed(() => userInfo.value?.name)
@@ -192,18 +193,11 @@ const handleCardClick = item => {
   if(!item.status){ 
     return 
   }
-  if(item.status===1){ 
-    if (item.url && (item.url.startsWith('http://') || item.url.startsWith('https://'))) {
-      window.open(item.url, '_blank');
-    } else {
-      if (loginName.value) {
-        router.push({
-          path:item.url
-        })
-      } else {
-        store.commit(`SET_LOGIN_SHOW`, true, item.router)
-        store.commit(`SET_LOGIN_TO_PATH`, item.router)
-      }
+  if(item.status===1){
+    // 统一跳转：http(s)/反代路径新标签打开；站内路由 router.push；未登录弹登录框
+    const result = openApplication(item)
+    // 内部跳转/弹登录时收起菜单（外部新标签打开则保持菜单）
+    if (result === 'internal' || result === 'login') {
       toggleMenu()
     }
   }else{
