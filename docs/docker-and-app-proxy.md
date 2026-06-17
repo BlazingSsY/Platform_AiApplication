@@ -25,7 +25,7 @@
 宿主机默认访问入口：
 
 ```text
-http://localhost:8080/
+http://localhost:18080/
 ```
 
 ## 二、首次启动
@@ -257,7 +257,7 @@ docker compose --env-file .env.docker up -d --build gateway
 访问：
 
 ```text
-http://localhost:8080/myapp/
+http://localhost:18080/myapp/
 ```
 
 如果页面能打开、刷新不 404、控制台没有大量资源 404、登录/接口请求正常，基本支持。
