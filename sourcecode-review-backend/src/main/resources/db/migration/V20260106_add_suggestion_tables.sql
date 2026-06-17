@@ -23,8 +23,8 @@ DROP TABLE IF EXISTS "public"."code_yjfk_answer";
 CREATE TABLE "public"."code_yjfk_answer" (
                                              "id" int8 NOT NULL,
                                              "f_id" int8 NOT NULL,
-                                             "answer" text COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-                                             "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                             "answer" text COLLATE "pg_catalog"."default" DEFAULT NULL,
+                                             "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                              "is_delete" int2 NOT NULL DEFAULT 0,
                                              "version" int4 DEFAULT 0,
                                              "create_date" timestamp(6),
@@ -55,8 +55,8 @@ CREATE TABLE "public"."code_yjfk_append_file" (
                                                   "f_id" int8 NOT NULL,
                                                   "type" varchar(100) COLLATE "pg_catalog"."default" NOT NULL,
                                                   "file_id" varchar(100) COLLATE "pg_catalog"."default" NOT NULL,
-                                                  "file_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-                                                  "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                                  "file_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL,
+                                                  "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                                   "is_delete" int2 NOT NULL DEFAULT 0,
                                                   "version" int4 DEFAULT 0,
                                                   "create_date" timestamp(6),
@@ -84,11 +84,11 @@ COMMENT ON COLUMN "public"."code_yjfk_append_file"."update_user" IS '最后更�
 DROP TABLE IF EXISTS "public"."code_yjfk_suggestion";
 CREATE TABLE "public"."code_yjfk_suggestion" (
                                                  "id" int8 NOT NULL,
-                                                 "title" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                                 "title" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                                  "suggestion" text COLLATE "pg_catalog"."default",
                                                  "status" int4,
-                                                 "description" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-                                                 "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                                 "description" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
+                                                 "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                                  "is_delete" int2 NOT NULL DEFAULT 0,
                                                  "version" int4 DEFAULT 0,
                                                  "create_date" timestamp(6),
@@ -122,9 +122,9 @@ COMMENT ON COLUMN "public"."code_yjfk_suggestion"."result_id" IS '审查结果ID
 DROP TABLE IF EXISTS "public"."code_yjfk_suggestion_status";
 CREATE TABLE "public"."code_yjfk_suggestion_status" (
                                                         "id" int8 NOT NULL,
-                                                        "suggestion_id" int8 DEFAULT NULL::character varying,
+                                                        "suggestion_id" int8 DEFAULT NULL,
                                                         "status" int4,
-                                                        "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                                        "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                                         "is_delete" int2 NOT NULL DEFAULT 0,
                                                         "version" int4 DEFAULT 0,
                                                         "create_date" timestamp(6),

@@ -16,12 +16,12 @@
 */
 
 ALTER TABLE "public"."dmsc_rule"
-    ADD COLUMN "explain" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying;
+    ADD COLUMN "explain" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL;
 
 COMMENT ON COLUMN "public"."dmsc_rule"."explain" IS '机理说明';
 
 ALTER TABLE "public"."dmsc_review_result_detail"
-    ADD COLUMN "rule_code" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying;
+    ADD COLUMN "rule_code" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL;
 
 COMMENT ON COLUMN "public"."dmsc_review_result_detail"."rule_code" IS '规则编号';
 

@@ -1,5 +1,5 @@
 ALTER TABLE "public"."dmsc_review_result_detail"
-    ADD COLUMN "question_id" varchar(100) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+    ADD COLUMN "question_id" varchar(100) COLLATE "pg_catalog"."default" DEFAULT NULL,
   ADD COLUMN "recheck_conclusion" varchar(500) COLLATE "pg_catalog"."default",
   ADD COLUMN "question_desc" text COLLATE "pg_catalog"."default",
   ADD COLUMN "recheck_status" int4 DEFAULT 0;

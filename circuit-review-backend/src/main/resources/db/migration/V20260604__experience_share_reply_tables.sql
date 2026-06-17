@@ -7,8 +7,8 @@ DROP TABLE IF EXISTS "public"."sjjyfx_experience_share_reply";
 CREATE TABLE "public"."sjjyfx_experience_share_reply" (
     "id" int8 NOT NULL,
     "f_id" int8 NOT NULL,
-    "reply" text COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-    "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+    "reply" text COLLATE "pg_catalog"."default" DEFAULT NULL,
+    "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
     "is_delete" int2 NOT NULL DEFAULT 0,
     "version" int4 DEFAULT 0,
     "create_date" timestamp(6),

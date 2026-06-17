@@ -22,9 +22,9 @@
 DROP TABLE IF EXISTS "public"."yjfk_suggestion_status";
 CREATE TABLE "public"."yjfk_suggestion_status" (
                                                    "id" int8 NOT NULL,
-                                                   "suggestion_id" int8 DEFAULT NULL::character varying,
+                                                   "suggestion_id" int8 DEFAULT NULL,
                                                    "status" int4,
-                                                   "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                                   "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                                    "is_delete" int2 NOT NULL DEFAULT 0,
                                                    "version" int4 DEFAULT 0,
                                                    "create_date" timestamp(6),

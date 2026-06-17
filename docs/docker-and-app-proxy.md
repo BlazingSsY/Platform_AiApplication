@@ -6,6 +6,43 @@
 2. 如何判断一个外部应用是否支持 `/xxx/` 子路径部署。
 3. 后续新增应用跳转时，不同方案分别改哪些配置。
 
+## 零、一键部署（推荐）
+
+不想记多步命令的，直接用仓库根目录的一键脚本：
+
+```powershell
+.\deploy.ps1 up      # Windows PowerShell
+```
+
+```bash
+chmod +x deploy.sh   # 首次赋予执行权限
+./deploy.sh up       # Linux / macOS（需已安装 docker compose 插件）
+```
+
+两个脚本功能完全一致，子命令同名。
+
+它会自动完成：
+
+1. 没有 `.env` 就从示例复制一份并提示你改配置；
+2. 先启动 `postgres / redis / minio`；
+3. 判断数据库是否为空，空库才导入各模块 `init.sql`（已有数据自动跳过，不会误删）；
+4. 用 BuildKit 依赖缓存构建并启动全部服务。
+
+常用子命令：
+
+```powershell
+.\deploy.ps1 up        # 全流程一键部署 / 增量更新
+.\deploy.ps1 rebuild   # 改完代码重新构建并启动（依赖走缓存，很快）
+.\deploy.ps1 logs portal-backend   # 跟踪某个服务日志
+.\deploy.ps1 ps        # 查看状态
+.\deploy.ps1 down      # 停止（保留数据）
+.\deploy.ps1 reset     # 停止并清空数据卷（仅测试环境）
+.\deploy.ps1 initdb -Force   # 强制重导数据库脚本
+```
+
+> `--env-file .env`、BuildKit 开关等参数都封装在脚本里，无需手动带。
+> 下面「一/二/三」是手动分步流程，作为原理参考；日常用上面的 `deploy.ps1` 即可。
+
 ## 一、当前平台的 Docker 结构
 
 本项目容器化后包含这些服务：
@@ -35,16 +72,16 @@ http://localhost:18080/
 复制模板：
 
 ```bash
-cp .env.docker.example .env.docker
+cp .env.example .env
 ```
 
 Windows PowerShell：
 
 ```powershell
-Copy-Item .env.docker.example .env.docker
+Copy-Item .env.example .env
 ```
 
-编辑 `.env.docker`，至少确认这些值：
+编辑 `.env`，至少确认这些值：
 
 ```env
 POSTGRES_DB=dlsc
@@ -85,7 +122,7 @@ REVIEW_SERVICE_URL=host.docker.internal:38080
 ### 2. 启动基础服务
 
 ```bash
-docker compose --env-file .env.docker up -d postgres redis minio
+docker compose up -d postgres redis minio
 ```
 
 ### 3. 初始化数据库
@@ -95,16 +132,16 @@ docker compose --env-file .env.docker up -d postgres redis minio
 首次空库可以手工导入：
 
 ```bash
-docker compose --env-file .env.docker exec -T postgres psql -U postgres -d dlsc < portal-backend/init.sql
-docker compose --env-file .env.docker exec -T postgres psql -U postgres -d dlsc < circuit-review-backend/init.sql
-docker compose --env-file .env.docker exec -T postgres psql -U postgres -d dlsc < sourcecode-review-backend/init.sql
-docker compose --env-file .env.docker exec -T postgres psql -U postgres -d dlsc < logical-review-backend/init.sql
+docker compose exec -T postgres psql -U postgres -d dlsc < portal-backend/init.sql
+docker compose exec -T postgres psql -U postgres -d dlsc < circuit-review-backend/init.sql
+docker compose exec -T postgres psql -U postgres -d dlsc < sourcecode-review-backend/init.sql
+docker compose exec -T postgres psql -U postgres -d dlsc < logical-review-backend/init.sql
 ```
 
 Windows PowerShell 中 `< file.sql` 对外部命令重定向有时不稳定，可以用：
 
 ```powershell
-Get-Content .\portal-backend\init.sql | docker compose --env-file .env.docker exec -T postgres psql -U postgres -d dlsc
+Get-Content .\portal-backend\init.sql | docker compose exec -T postgres psql -U postgres -d dlsc
 ```
 
 其余 SQL 同理。
@@ -114,32 +151,32 @@ Get-Content .\portal-backend\init.sql | docker compose --env-file .env.docker ex
 ### 4. 构建并启动全部服务
 
 ```bash
-docker compose --env-file .env.docker up -d --build
+docker compose up -d --build
 ```
 
 查看状态：
 
 ```bash
-docker compose --env-file .env.docker ps
+docker compose ps
 ```
 
 查看日志：
 
 ```bash
-docker compose --env-file .env.docker logs -f gateway
-docker compose --env-file .env.docker logs -f portal-backend
+docker compose logs -f gateway
+docker compose logs -f portal-backend
 ```
 
 停止：
 
 ```bash
-docker compose --env-file .env.docker down
+docker compose down
 ```
 
 停止并删除数据库、Redis、MinIO 数据卷：
 
 ```bash
-docker compose --env-file .env.docker down -v
+docker compose down -v
 ```
 
 `down -v` 会删除数据，仅用于测试环境重置。
@@ -251,7 +288,7 @@ location ^~ /myapp/ {
 重建或重启 gateway：
 
 ```bash
-docker compose --env-file .env.docker up -d --build gateway
+docker compose up -d --build gateway
 ```
 
 访问：
@@ -331,7 +368,7 @@ pot_application.url = /myapp/
 重启 gateway：
 
 ```bash
-docker compose --env-file .env.docker up -d --build gateway
+docker compose up -d --build gateway
 ```
 
 访问效果：
@@ -442,13 +479,13 @@ VITE_APP_API_BASE_URL=''
 如果只改了 `docker/nginx/default.conf`：
 
 ```bash
-docker compose --env-file .env.docker up -d --build gateway
+docker compose up -d --build gateway
 ```
 
 或者：
 
 ```bash
-docker compose --env-file .env.docker restart gateway
+docker compose restart gateway
 ```
 
 如果 Nginx 配置被 bake 进镜像，推荐用 `--build gateway`。

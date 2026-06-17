@@ -3,11 +3,13 @@ services:
     image: postgres:14-alpine
     container_name: daip-postgres
     env_file:
-      - .env.docker
+      - .env
     ports:
       - "15432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      # 合并基线：仅当数据卷为空(首次)时由官方镜像自动执行；已有数据则跳过，重启不丢。
+      - ./docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
       interval: 10s
@@ -34,7 +36,7 @@ services:
     image: minio/minio:RELEASE.2024-06-13T22-53-53Z
     container_name: daip-minio
     env_file:
-      - .env.docker
+      - .env
     command: ["server", "/data", "--console-address", ":9001"]
     ports:
       - "19000:9000"
@@ -56,7 +58,7 @@ services:
         MODULE: portal-backend
     container_name: daip-portal-backend
     env_file:
-      - .env.docker
+      - .env
     environment:
       SERVER_PORT: 8011
     depends_on:
@@ -74,7 +76,7 @@ services:
         MODULE: circuit-review-backend
     container_name: daip-circuit-review-backend
     env_file:
-      - .env.docker
+      - .env
     environment:
       SERVER_PORT: 8012
     depends_on:
@@ -94,7 +96,7 @@ services:
         MODULE: sourcecode-review-backend
     container_name: daip-sourcecode-review-backend
     env_file:
-      - .env.docker
+      - .env
     environment:
       SERVER_PORT: 8013
     depends_on:
@@ -114,7 +116,7 @@ services:
         MODULE: logical-review-backend
     container_name: daip-logical-review-backend
     env_file:
-      - .env.docker
+      - .env
     environment:
       SERVER_PORT: 8014
     depends_on:
@@ -134,7 +136,7 @@ services:
         MODULE: sso-server
     container_name: daip-sso-server
     env_file:
-      - .env.docker
+      - .env
     depends_on:
       redis:
         condition: service_healthy

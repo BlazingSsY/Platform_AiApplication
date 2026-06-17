@@ -6,7 +6,7 @@ CREATE TABLE "public"."dlsc_update_note" (
     "id" int8 NOT NULL,
     "update_time" timestamp(6),
     "content" text COLLATE "pg_catalog"."default",
-    "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+    "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
     "is_delete" int2 NOT NULL DEFAULT 0,
     "version" int4 DEFAULT 0,
     "create_date" timestamp(6),

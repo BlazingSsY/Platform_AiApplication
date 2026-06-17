@@ -23,9 +23,9 @@ DROP TABLE IF EXISTS "public"."dmsc_tool_file";
 CREATE TABLE "public"."dmsc_tool_file" (
                                            "id" int8 NOT NULL DEFAULT 4,
                                            "file_id" varchar(100) COLLATE "pg_catalog"."default" NOT NULL,
-                                           "file_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-                                           "tool_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-                                           "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                           "file_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL,
+                                           "tool_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL,
+                                           "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                            "is_delete" int2 NOT NULL DEFAULT 0,
                                            "version" int4 DEFAULT 0,
                                            "create_date" timestamp(6),

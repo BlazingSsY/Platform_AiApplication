@@ -14,7 +14,7 @@ ALTER TABLE "public"."dlsc_review_result_detail"
 COMMENT ON COLUMN "public"."dlsc_review_result_detail"."approved_audit_type" IS '批准的审核类型';
 
 ALTER TABLE "public"."dlsc_review_result_detail"
-    ADD COLUMN "issue_feedback" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying;
+    ADD COLUMN "issue_feedback" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL;
 
 COMMENT ON COLUMN "public"."dlsc_review_result_detail"."issue_feedback" IS '问题反馈';
 
@@ -57,7 +57,7 @@ CREATE TABLE "public"."dlsc_review_result_audit" (
                                                "file_version_id" int8 NOT NULL,
                                                "result_id" int8 NOT NULL,
                                                "is_audit_finished" SMALLINT NOT NULL CHECK (is_audit_finished IN (0, 1)) DEFAULT 0,
-                                               "audit_time" timestamp(6) DEFAULT NULL::character varying,
+                                               "audit_time" timestamp(6) DEFAULT NULL,
                                                "is_delete" SMALLINT NOT NULL CHECK (is_delete IN (0, 1)) DEFAULT 0,
                                                "version" int4 DEFAULT 0,
                                                "create_date" timestamp(6),
@@ -87,10 +87,10 @@ CREATE TABLE "public"."dlsc_review_result_detail_audit" (
                                                       "result_detail_id" int8 NOT NULL,
                                                       "result_audit_id" int8 NOT NULL,
                                                       "audit_type" int4,
-                                                      "issue_feedback" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                                      "issue_feedback" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                                       "status" int4 NOT NULL,
-                                                      "audit_submit_time" timestamp(6) DEFAULT NULL::character varying,
-                                                      "audit_close_time" timestamp(6) DEFAULT NULL::character varying,
+                                                      "audit_submit_time" timestamp(6) DEFAULT NULL,
+                                                      "audit_close_time" timestamp(6) DEFAULT NULL,
                                                       "is_delete" SMALLINT NOT NULL CHECK (is_delete IN (0, 1)) DEFAULT 0,
                                                       "version" int4 DEFAULT 0,
                                                       "create_date" timestamp(6),

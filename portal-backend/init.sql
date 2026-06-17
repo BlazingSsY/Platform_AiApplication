@@ -62,7 +62,6 @@ COMMENT ON COLUMN "public"."pot_application"."update_user" IS '最后更新人';
 
 ALTER TABLE "public"."pot_application" ADD CONSTRAINT "pot_application_is_delete_check" CHECK ((is_delete = ANY (ARRAY[0, 1])));
 ALTER TABLE "public"."pot_application" ADD CONSTRAINT "pot_application_status_check" CHECK ((status = ANY (ARRAY[0, 1, 2])));
-ALTER TABLE "public"."pot_application" ADD CONSTRAINT "pot_application_pkey" PRIMARY KEY ("id");
 
 
 
@@ -141,11 +140,6 @@ COMMENT ON COLUMN "public"."pot_information"."update_user" IS '最后更新人';
 ALTER TABLE "public"."pot_information" ADD CONSTRAINT "pot_information_type_check" CHECK ((type = ANY (ARRAY[1, 2, 3])));
 ALTER TABLE "public"."pot_information" ADD CONSTRAINT "pot_information_status_check" CHECK ((status = ANY (ARRAY[0, 1, 2])));
 ALTER TABLE "public"."pot_information" ADD CONSTRAINT "pot_information_is_delete_check" CHECK ((is_delete = ANY (ARRAY[0, 1])));
-
--- ----------------------------
--- Primary Key structure for table pot_information
--- ----------------------------
-ALTER TABLE "public"."pot_information" ADD CONSTRAINT "pot_information_pkey" PRIMARY KEY ("id");
 
 -- ----------------------------
 -- Table structure for urm_department
@@ -570,16 +564,16 @@ ALTER TABLE "public"."urm_userrole" ADD CONSTRAINT "urm_userrole_pkey" PRIMARY K
 -- 以下索引用于优化查询,再性能BUG复现后添加
 -- ----------------------------
 
-CREATE INDEX "userrole_user_id_index" ON "urm_userrole" USING btree (
+CREATE INDEX IF NOT EXISTS "userrole_user_id_index" ON "urm_userrole" USING btree (
     "user_id"
     );
 
 
-CREATE INDEX "department_f_id_index" ON "urm_department" USING btree (
+CREATE INDEX IF NOT EXISTS "department_f_id_index" ON "urm_department" USING btree (
     "f_id"
     );
 
-CREATE INDEX "department_name_index" ON "urm_department" USING btree (
+CREATE INDEX IF NOT EXISTS "department_name_index" ON "urm_department" USING btree (
     "name"
     );
 

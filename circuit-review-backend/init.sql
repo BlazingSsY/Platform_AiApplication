@@ -23,13 +23,13 @@ DROP TABLE IF EXISTS "public"."dlsc_file";
 CREATE TABLE "public"."dlsc_file" (
                                       "id" int8 NOT NULL DEFAULT 4,
                                       "file_id" varchar(100) COLLATE "pg_catalog"."default" NOT NULL,
-                                      "file_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-                                      "file_path" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-                                      "file_save_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                      "file_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL,
+                                      "file_path" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL,
+                                      "file_save_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                       "secret_level" int2 NOT NULL DEFAULT 4,
-                                      "department_id" int8 DEFAULT NULL::character varying,
-                                      "owner_id" int8 DEFAULT NULL::character varying,
-                                      "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                      "department_id" int8 DEFAULT NULL,
+                                      "owner_id" int8 DEFAULT NULL,
+                                      "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                       "is_recycle" SMALLINT NOT NULL CHECK (is_delete IN (0, 1)) DEFAULT 0,
                                       "is_delete" SMALLINT NOT NULL CHECK (is_delete IN (0, 1)) DEFAULT 0,
                                       "version" int4 DEFAULT 0,
@@ -66,12 +66,12 @@ CREATE TABLE "public"."dlsc_file_version" (
                                       "file_id" varchar(100) COLLATE "pg_catalog"."default" NOT NULL,
                                       "minio_id" varchar(100) COLLATE "pg_catalog"."default" NOT NULL,
                                       "file_version" int4 DEFAULT 1,
-                                      "file_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-                                      "file_origin_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                      "file_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL,
+                                      "file_origin_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                       "secret_level" int2 NOT NULL DEFAULT 4,
-                                      "department_id" int8 DEFAULT NULL::character varying,
-                                      "owner_id" int8 DEFAULT NULL::character varying,
-                                      "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                      "department_id" int8 DEFAULT NULL,
+                                      "owner_id" int8 DEFAULT NULL,
+                                      "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                       "is_recycle" SMALLINT NOT NULL CHECK (is_delete IN (0, 1)) DEFAULT 0,
                                       "is_delete" SMALLINT NOT NULL CHECK (is_delete IN (0, 1)) DEFAULT 0,
                                       "version" int4 DEFAULT 0,
@@ -107,14 +107,14 @@ CREATE TABLE "public"."dlsc_review_result" (
                                                "id" int8 NOT NULL,
                                                "file_id" int8 NOT NULL,
                                                "file_version_id" int8 NOT NULL,
-                                               "check_points" int4 DEFAULT NULL::character varying,
-                                               "pass_check_points" int4 DEFAULT NULL::character varying,
-                                               "pass_rate" numeric(15,5) DEFAULT NULL::character varying,
+                                               "check_points" int4 DEFAULT NULL,
+                                               "pass_check_points" int4 DEFAULT NULL,
+                                               "pass_rate" numeric(15,5) DEFAULT NULL,
                                                "is_closed_loop" SMALLINT NOT NULL CHECK (is_closed_loop IN (0, 1)) DEFAULT 0,
-                                               "review_time" timestamp(6) DEFAULT NULL::character varying,
+                                               "review_time" timestamp(6) DEFAULT NULL,
                                                "status" int4,
-                                               "error_message" text COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-                                               "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                               "error_message" text COLLATE "pg_catalog"."default" DEFAULT NULL,
+                                               "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                                "is_delete" SMALLINT NOT NULL CHECK (is_delete IN (0, 1)) DEFAULT 0,
                                                "version" int4 DEFAULT 0,
                                                "create_date" timestamp(6),
@@ -149,11 +149,11 @@ CREATE TABLE "public"."dlsc_review_result_detail" (
                                                       "id" int8 NOT NULL,
                                                       "result_id" int8,
                                                       "rule_id" int8,
-                                                      "device_type" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-                                                      "tag_pin" text COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-                                                      "review_suggestion" text COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                                      "device_type" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL,
+                                                      "tag_pin" text COLLATE "pg_catalog"."default" DEFAULT NULL,
+                                                      "review_suggestion" text COLLATE "pg_catalog"."default" DEFAULT NULL,
                                                       "is_passed" SMALLINT CHECK (is_passed IN (0, 1)),
-                                                      "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                                      "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                                       "is_delete" SMALLINT NOT NULL CHECK (is_delete IN (0, 1)) DEFAULT 0,
                                                       "version" int4 DEFAULT 0,
                                                       "create_date" timestamp(6),
@@ -184,8 +184,8 @@ DROP TABLE IF EXISTS "public"."dlsc_rule";
 CREATE TABLE "public"."dlsc_rule" (
                                       "id" int8 NOT NULL,
                                       "type" int4,
-                                      "name" varchar(1000) COLLATE "pg_catalog"."default" NOT NULL DEFAULT NULL::character varying,
-                                      "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                      "name" varchar(1000) COLLATE "pg_catalog"."default" NOT NULL DEFAULT NULL,
+                                      "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                       "is_delete" SMALLINT NOT NULL CHECK (is_delete IN (0, 1)) DEFAULT 0,
                                       "version" int4 DEFAULT 0,
                                       "create_date" timestamp(6),
@@ -216,9 +216,9 @@ DROP TABLE IF EXISTS "public"."dlsc_tool_file";
 CREATE TABLE "public"."dlsc_tool_file" (
                                            "id" int8 NOT NULL DEFAULT 4,
                                            "file_id" varchar(100) COLLATE "pg_catalog"."default" NOT NULL,
-                                           "file_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-                                           "tool_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-                                           "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                           "file_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL,
+                                           "tool_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL,
+                                           "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                            "is_delete" SMALLINT NOT NULL CHECK (is_delete IN (0, 1)) DEFAULT 0,
                                            "version" int4 DEFAULT 0,
                                            "create_date" timestamp(6),
@@ -266,39 +266,25 @@ ALTER TABLE "public"."dlsc_review_result_detail" ADD CONSTRAINT "dlsc_review_res
 ALTER TABLE "public"."dlsc_rule" ADD CONSTRAINT "dlsc_rule_pkey" PRIMARY KEY ("id");
 
 -- ----------------------------
--- Primary Key structure for table urm_department
 -- ----------------------------
-ALTER TABLE "public"."urm_department" ADD CONSTRAINT "urm_department_pkey" PRIMARY KEY ("id");
 
 -- ----------------------------
--- Primary Key structure for table urm_power
 -- ----------------------------
-ALTER TABLE "public"."urm_power" ADD CONSTRAINT "urm_power_pkey" PRIMARY KEY ("id");
 
 -- ----------------------------
--- Primary Key structure for table urm_role
 -- ----------------------------
-ALTER TABLE "public"."urm_role" ADD CONSTRAINT "urm_role_pkey" PRIMARY KEY ("id");
 
 -- ----------------------------
--- Primary Key structure for table urm_rolepower
 -- ----------------------------
-ALTER TABLE "public"."urm_rolepower" ADD CONSTRAINT "urm_rolepower_pkey" PRIMARY KEY ("id");
 
 -- ----------------------------
--- Primary Key structure for table urm_user
 -- ----------------------------
-ALTER TABLE "public"."urm_user" ADD CONSTRAINT "urm_user_pkey" PRIMARY KEY ("id");
 
 -- ----------------------------
--- Primary Key structure for table urm_userlog
 -- ----------------------------
-ALTER TABLE "public"."urm_userlog" ADD CONSTRAINT "urm_userlog_pkey" PRIMARY KEY ("id");
 
 -- ----------------------------
--- Primary Key structure for table urm_userrole
 -- ----------------------------
-ALTER TABLE "public"."urm_userrole" ADD CONSTRAINT "urm_userrole_pkey" PRIMARY KEY ("id");
 
 
 ALTER TABLE "public"."dlsc_tool_file" ADD CONSTRAINT "dlsc_file_copy1_pkey" PRIMARY KEY ("id");
@@ -309,106 +295,106 @@ ALTER TABLE "public"."dlsc_tool_file" ADD CONSTRAINT "dlsc_file_copy1_pkey" PRIM
 -- 以下索引用于优化查询,再性能BUG复现后添加
 -- ----------------------------
 
-CREATE INDEX "userrole_user_id_index" ON "urm_userrole" USING btree (
+CREATE INDEX IF NOT EXISTS "userrole_user_id_index" ON "urm_userrole" USING btree (
     "user_id"
     );
 
 
-CREATE INDEX "department_f_id_index" ON "urm_department" USING btree (
+CREATE INDEX IF NOT EXISTS "department_f_id_index" ON "urm_department" USING btree (
     "f_id"
     );
 
-CREATE INDEX "department_name_index" ON "urm_department" USING btree (
+CREATE INDEX IF NOT EXISTS "department_name_index" ON "urm_department" USING btree (
     "name"
     );
 
-CREATE INDEX "file_file_id_index" ON "dlsc_file" USING btree (
+CREATE INDEX IF NOT EXISTS "file_file_id_index" ON "dlsc_file" USING btree (
     "file_id"
     );
 
-CREATE INDEX "file_department_id_index" ON "dlsc_file" USING btree (
+CREATE INDEX IF NOT EXISTS "file_department_id_index" ON "dlsc_file" USING btree (
     "department_id"
     );
 
-CREATE INDEX "file_owner_id_index" ON "dlsc_file" USING btree (
+CREATE INDEX IF NOT EXISTS "file_owner_id_index" ON "dlsc_file" USING btree (
     "owner_id"
     );
 
-CREATE INDEX "file_is_recycle_index" ON "dlsc_file" USING btree (
+CREATE INDEX IF NOT EXISTS "file_is_recycle_index" ON "dlsc_file" USING btree (
     "is_recycle"
     );
 
-CREATE INDEX "file_create_user_index" ON "dlsc_file" USING btree (
+CREATE INDEX IF NOT EXISTS "file_create_user_index" ON "dlsc_file" USING btree (
     "create_user"
     );
 
-CREATE INDEX "file_version_file_id_index" ON "dlsc_file_version" USING btree (
+CREATE INDEX IF NOT EXISTS "file_version_file_id_index" ON "dlsc_file_version" USING btree (
     "file_id"
     );
 
-CREATE INDEX "file_version_department_id_index" ON "dlsc_file_version" USING btree (
+CREATE INDEX IF NOT EXISTS "file_version_department_id_index" ON "dlsc_file_version" USING btree (
     "department_id"
     );
 
-CREATE INDEX "file_version_owner_id_index" ON "dlsc_file_version" USING btree (
+CREATE INDEX IF NOT EXISTS "file_version_owner_id_index" ON "dlsc_file_version" USING btree (
     "owner_id"
     );
 
-CREATE INDEX "file_version_is_recycle_index" ON "dlsc_file_version" USING btree (
+CREATE INDEX IF NOT EXISTS "file_version_is_recycle_index" ON "dlsc_file_version" USING btree (
     "is_recycle"
     );
 
-CREATE INDEX "file_version_create_user_index" ON "dlsc_file_version" USING btree (
+CREATE INDEX IF NOT EXISTS "file_version_create_user_index" ON "dlsc_file_version" USING btree (
     "create_user"
     );
 
-CREATE INDEX "review_result_file_id_index" ON "dlsc_review_result" USING btree (
+CREATE INDEX IF NOT EXISTS "review_result_file_id_index" ON "dlsc_review_result" USING btree (
     "file_id"
     );
 
-CREATE INDEX "review_result_file_id_index" ON "dlsc_review_result" USING btree (
+CREATE INDEX IF NOT EXISTS "review_result_file_id_index" ON "dlsc_review_result" USING btree (
     "file_version_id"
     );
 
-CREATE INDEX "review_result_review_time_index" ON "dlsc_review_result" USING btree (
+CREATE INDEX IF NOT EXISTS "review_result_review_time_index" ON "dlsc_review_result" USING btree (
     "review_time"
     );
 
-CREATE INDEX "review_result_status_index" ON "dlsc_review_result" USING btree (
+CREATE INDEX IF NOT EXISTS "review_result_status_index" ON "dlsc_review_result" USING btree (
     "status"
     );
 
-CREATE INDEX "review_result_create_date_index" ON "dlsc_review_result" (
+CREATE INDEX IF NOT EXISTS "review_result_create_date_index" ON "dlsc_review_result" (
                                                                         "create_date"
     );
 
 
-CREATE INDEX "review_result_detail_result_id_index" ON "dlsc_review_result_detail" (
+CREATE INDEX IF NOT EXISTS "review_result_detail_result_id_index" ON "dlsc_review_result_detail" (
                                                                                     "result_id"
     );
 
-CREATE INDEX "review_result_detail_result_rule_id_index" ON "dlsc_review_result_detail" (
+CREATE INDEX IF NOT EXISTS "review_result_detail_result_rule_id_index" ON "dlsc_review_result_detail" (
                                                                                          "rule_id"
     );
 
-CREATE INDEX "review_result_detail_result_device_type_index" ON "dlsc_review_result_detail" (
+CREATE INDEX IF NOT EXISTS "review_result_detail_result_device_type_index" ON "dlsc_review_result_detail" (
                                                                                              "device_type"
     );
 
-CREATE INDEX "review_result_detail_result_is_passed_index" ON "dlsc_review_result_detail" (
+CREATE INDEX IF NOT EXISTS "review_result_detail_result_is_passed_index" ON "dlsc_review_result_detail" (
                                                                                            "is_passed"
     );
 
-CREATE INDEX "review_result_detail_result_create_date_index" ON "dlsc_review_result_detail" (
+CREATE INDEX IF NOT EXISTS "review_result_detail_result_create_date_index" ON "dlsc_review_result_detail" (
                                                                                              "create_date"
     );
 
 
-CREATE INDEX "rule_type_index" ON "dlsc_rule" USING btree (
+CREATE INDEX IF NOT EXISTS "rule_type_index" ON "dlsc_rule" USING btree (
     "type"
     );
 
-CREATE INDEX "rule_create_date_index" ON "dlsc_rule" USING btree (
+CREATE INDEX IF NOT EXISTS "rule_create_date_index" ON "dlsc_rule" USING btree (
     "create_date"
     );
 
@@ -420,8 +406,8 @@ DROP TABLE IF EXISTS "public"."yjfk_answer";
 CREATE TABLE "public"."yjfk_answer" (
                                         "id" int8 NOT NULL,
                                         "f_id" int8 NOT NULL,
-                                        "answer" text COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-                                        "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                        "answer" text COLLATE "pg_catalog"."default" DEFAULT NULL,
+                                        "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                         "is_delete" int2 NOT NULL DEFAULT 0,
                                         "version" int4 DEFAULT 0,
                                         "create_date" timestamp(6),
@@ -472,8 +458,8 @@ CREATE TABLE "public"."yjfk_append_file" (
                                              "f_id" int8 NOT NULL,
                                              "type" varchar(100) COLLATE "pg_catalog"."default" NOT NULL,
                                              "file_id" varchar(100) COLLATE "pg_catalog"."default" NOT NULL,
-                                             "file_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-                                             "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                             "file_name" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL,
+                                             "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                              "is_delete" int2 NOT NULL DEFAULT 0,
                                              "version" int4 DEFAULT 0,
                                              "create_date" timestamp(6),
@@ -520,11 +506,11 @@ ALTER TABLE "public"."yjfk_append_file" ADD CONSTRAINT "yjfk_append_file_pkey" P
 DROP TABLE IF EXISTS "public"."yjfk_suggestion";
 CREATE TABLE "public"."yjfk_suggestion" (
                                             "id" int8 NOT NULL,
-                                            "title" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                            "title" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                             "suggestion" text COLLATE "pg_catalog"."default",
                                             "status" int4,
-                                            "description" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
-                                            "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                            "description" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
+                                            "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                             "is_delete" int2 NOT NULL DEFAULT 0,
                                             "version" int4 DEFAULT 0,
                                             "create_date" timestamp(6),
@@ -568,9 +554,9 @@ ALTER TABLE "public"."yjfk_suggestion" ADD CONSTRAINT "yjfk_suggestion_pkey" PRI
 DROP TABLE IF EXISTS "public"."yjfk_suggestion_status";
 CREATE TABLE "public"."yjfk_suggestion_status" (
                                                    "id" int8 NOT NULL,
-                                                   "suggestion_id" int8 DEFAULT NULL::character varying,
+                                                   "suggestion_id" int8 DEFAULT NULL,
                                                    "status" int4,
-                                                   "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                                   "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                                    "is_delete" int2 NOT NULL DEFAULT 0,
                                                    "version" int4 DEFAULT 0,
                                                    "create_date" timestamp(6),
@@ -593,7 +579,7 @@ COMMENT ON COLUMN "public"."yjfk_suggestion_status"."update_user" IS '最后更�
 -- ----------------------------
 -- Indexes structure for table yjfk_suggestion_status
 -- ----------------------------
-CREATE INDEX "suggestion_status_create_date_index" ON "public"."yjfk_suggestion_status" USING btree (
+CREATE INDEX IF NOT EXISTS "suggestion_status_create_date_index" ON "public"."yjfk_suggestion_status" USING btree (
     "create_date" "pg_catalog"."timestamp_ops" ASC NULLS LAST
     );
 
@@ -613,9 +599,9 @@ COMMENT ON COLUMN "public"."yjfk_answer"."ref_id" IS '参照的回复ID(外键,�
 -- ----------------------------
 CREATE TABLE "public"."dlsc_naming_convention" (
                                                    "id" int8 NOT NULL,
-                                                   "title" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                                   "title" varchar(500) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                                    "content" text COLLATE "pg_catalog"."default",
-                                                   "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL::character varying,
+                                                   "comments" varchar(1000) COLLATE "pg_catalog"."default" DEFAULT NULL,
                                                    "is_delete" int2 NOT NULL DEFAULT 0,
                                                    "version" int4 DEFAULT 0,
                                                    "create_date" timestamp(6),
