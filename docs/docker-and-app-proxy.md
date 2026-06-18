@@ -1,339 +1,230 @@
-# Docker 启动与应用跳转配置说明
+# Docker 启动与应用反代配置说明
 
-本文说明三件事：
+本文档按当前项目代码整理，适用于使用 Docker Compose 启动门户、后端服务、PostgreSQL、Redis、MinIO 和 Nginx 网关。
 
-1. 如何用 Docker Compose 启动当前平台。
-2. 如何判断一个外部应用是否支持 `/xxx/` 子路径部署。
-3. 后续新增应用跳转时，不同方案分别改哪些配置。
+## 先看结论
 
-## 零、一键部署（推荐）
+- 当前项目使用根目录 `.env` 作为 Docker Compose 环境变量文件，不再使用 `.env.docker`。
+- 统一访问入口是 `http://localhost:18080/`，端口由 `.env` 中的 `GATEWAY_PORT` 控制。
+- `docker/db/init.sql` 会在 PostgreSQL 数据卷首次创建时自动执行。已有数据卷不会重复执行该脚本。
+- 门户、SSO、三个审查应用的页面和后端接口都在当前 Compose 内启动。
+- 真正执行审查任务所依赖的外部审查引擎不在当前 Compose 内，需要在 `.env` 中配置正确的 `host:port`。
+- 修改 Java、前端或 Nginx 配置后通常需要重新构建对应镜像；只修改 `.env` 通常只需要重新创建容器。
 
-不想记多步命令的，直接用仓库根目录的一键脚本：
+## 服务组成
 
-```powershell
-.\deploy.ps1 up      # Windows PowerShell
-```
+| 服务 | 容器名 | 作用 | 容器内端口 | 对外访问 |
+| --- | --- | --- | --- | --- |
+| `gateway` | `daip-gateway` | Nginx，承载前端静态页面和统一反代 | `80` | `${GATEWAY_PORT:-18080}` |
+| `portal-backend` | `daip-portal-backend` | 门户、用户、应用卡片、组织等接口 | `8011` | 经 `/portal/` 反代 |
+| `circuit-review-backend` | `daip-circuit-review-backend` | 电路审查后端 | `8012` | 经 `/circuitreview/` 反代 |
+| `sourcecode-review-backend` | `daip-sourcecode-review-backend` | 软件代码审查后端 | `8013` | 经 `/sourcecodereview/` 反代 |
+| `logical-review-backend` | `daip-logical-review-backend` | 逻辑审查后端 | `8014` | 经 `/logicreview/` 反代 |
+| `sso-server` | `daip-sso-server` | 单点登录服务 | `9091` | 经 `/sso/` 反代 |
+| `postgres` | `daip-postgres` | PostgreSQL 数据库 | `5432` | `localhost:15432` |
+| `redis` | `daip-redis` | Redis，主要供 SSO 使用 | `6379` | `localhost:6379` |
+| `minio` | `daip-minio` | 对象存储 | `9000/9001` | `localhost:19000/19001` |
 
-```bash
-chmod +x deploy.sh   # 首次赋予执行权限
-./deploy.sh up       # Linux / macOS（需已安装 docker compose 插件）
-```
+## 首次启动
 
-两个脚本功能完全一致，子命令同名。
-
-它会自动完成：
-
-1. 没有 `.env` 就从示例复制一份并提示你改配置；
-2. 先启动 `postgres / redis / minio`；
-3. 判断数据库是否为空，空库才导入各模块 `init.sql`（已有数据自动跳过，不会误删）；
-4. 用 BuildKit 依赖缓存构建并启动全部服务。
-
-常用子命令：
-
-```powershell
-.\deploy.ps1 up        # 全流程一键部署 / 增量更新
-.\deploy.ps1 rebuild   # 改完代码重新构建并启动（依赖走缓存，很快）
-.\deploy.ps1 logs portal-backend   # 跟踪某个服务日志
-.\deploy.ps1 ps        # 查看状态
-.\deploy.ps1 down      # 停止（保留数据）
-.\deploy.ps1 reset     # 停止并清空数据卷（仅测试环境）
-.\deploy.ps1 initdb -Force   # 强制重导数据库脚本
-```
-
-> `--env-file .env`、BuildKit 开关等参数都封装在脚本里，无需手动带。
-> 下面「一/二/三」是手动分步流程，作为原理参考；日常用上面的 `deploy.ps1` 即可。
-
-## 一、当前平台的 Docker 结构
-
-本项目容器化后包含这些服务：
-
-| 服务 | 作用 | 容器内地址 |
-| --- | --- | --- |
-| `gateway` | Nginx 统一入口，托管前端并反代后端 | `http://gateway` |
-| `portal-backend` | 门户后端 | `http://portal-backend:8011/portal` |
-| `circuit-review-backend` | 电路审查后端 | `http://circuit-review-backend:8012/circuitreview` |
-| `sourcecode-review-backend` | 源码审查后端 | `http://sourcecode-review-backend:8013/sourcecodereview` |
-| `logical-review-backend` | 逻辑审查后端 | `http://logical-review-backend:8014/logicreview` |
-| `sso-server` | SSO 服务 | `http://sso-server:9091/sso` |
-| `postgres` | PostgreSQL | `postgres:5432` |
-| `redis` | Redis | `redis:6379` |
-| `minio` | MinIO | `minio:9000` |
-
-宿主机默认访问入口：
-
-```text
-http://localhost:18080/
-```
-
-## 二、首次启动
-
-### 1. 准备环境变量
-
-复制模板：
-
-```bash
-cp .env.example .env
-```
-
-Windows PowerShell：
+在项目根目录执行：
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-编辑 `.env`，至少确认这些值：
+然后编辑 `.env`，至少确认这些配置：
 
 ```env
-POSTGRES_DB=dlsc
-POSTGRES_USER=postgres
 POSTGRES_PASSWORD=change-me
-
-DLSC_DB_HOST=postgres:5432
-DLSC_DB_NAME=dlsc
-DLSC_DB_USERNAME=postgres
 DLSC_DB_PASSWORD=change-me
-
-MINIO_SERVER=minio:9000
-MINIO_ACCOUNT=minioadmin
-MINIO_SECURITY=minioadmin
-
-SSO_REDIS_HOST=redis
-SSO_MANAGEMENT_URL=http://portal-backend:8011/portal/v1
+MINIO_ROOT_USER=minioadmin
+MINIO_ROOT_PASSWORD=minioadmin
+GATEWAY_PORT=18080
 
 REVIEW_SERVICE_URL=host.docker.internal:38080
 CODE_REVIEW_SERVICE_URL=host.docker.internal:38081
 LOGIC_REVIEW_SERVICE_URL=host.docker.internal:38082
 ```
 
-`REVIEW_SERVICE_URL`、`CODE_REVIEW_SERVICE_URL`、`LOGIC_REVIEW_SERVICE_URL` 是外部审查引擎地址。应用配置中会自动拼接 `http://`，所以这里只填 `host:port`。
+启动全部服务：
 
-如果外部审查引擎也在 Docker Compose 网络中，填服务名和端口，例如：
-
-```env
-REVIEW_SERVICE_URL=circuit-engine:38080
-```
-
-如果外部审查引擎跑在宿主机 Windows 上，Docker Desktop 通常可以用：
-
-```env
-REVIEW_SERVICE_URL=host.docker.internal:38080
-```
-
-### 2. 启动基础服务
-
-```bash
-docker compose up -d postgres redis minio
-```
-
-### 3. 数据库初始化（已自动，无需手动）
-
-数据库**自动初始化**，不再需要手动导入。`docker-compose.yml` 把合并基线 `docker/db/init.sql` 挂载到 PostgreSQL 官方镜像的 `/docker-entrypoint-initdb.d/` 目录：
-
-- **数据卷为空（首次）**：postgres 启动时自动执行该脚本，一次建好全部表结构 + 初始数据 + 内置应用；
-- **数据卷已有数据（重启 / stop-start）**：自动跳过，数据原样保留，不会重复执行、不会清库。
-
-所以第 2 步 `docker compose up -d postgres` 起来时，初始化就已经完成了。
-
-> 历史说明：早期是各模块根目录 4 个 `init.sql` + 一堆 `db/migration` 脚本手动导入，且自动迁移机制被注释关闭，导致 schema 漂移、反复报错。现已合并固化为单一、PG 合法、可重复导入的 `docker/db/init.sql`（由修好的库 `pg_dump` 生成）。原 4 个 `init.sql` 和 `db/migration` 运行时已不再使用，仅留作历史参考；**以后改表结构改 `docker/db/init.sql`**。
-
-如需重置数据库（仅测试环境）：`docker compose down -v` 删除数据卷，下次启动会用基线重新初始化。
-
-### 4. 构建并启动全部服务
-
-```bash
+```powershell
 docker compose up -d --build
 ```
 
-查看状态：
+查看服务状态：
 
-```bash
+```powershell
 docker compose ps
 ```
 
-查看日志：
+浏览器访问：
 
-```bash
-docker compose logs -f gateway
-docker compose logs -f portal-backend
+```text
+http://localhost:18080/
 ```
 
-停止：
+默认账号：
 
-```bash
+```text
+admin / 111111
+```
+
+MinIO 控制台：
+
+```text
+http://localhost:19001/
+```
+
+## 常用启动和重启命令
+
+首次启动或代码变更后重建：
+
+```powershell
+docker compose up -d --build
+```
+
+停止并移除当前 Compose 创建的容器和网络，不删除数据库、Redis、MinIO 数据卷：
+
+```powershell
 docker compose down
 ```
 
-停止并删除数据库、Redis、MinIO 数据卷：
+下次重新启动：
 
-```bash
+```powershell
+docker compose up -d
+```
+
+只修改 `.env` 后，镜像不需要重新构建，但需要重新创建使用了环境变量的容器：
+
+```powershell
+docker compose up -d --force-recreate
+```
+
+只修改某个后端服务代码：
+
+```powershell
+docker compose up -d --build portal-backend
+docker compose up -d --build circuit-review-backend
+docker compose up -d --build sourcecode-review-backend
+docker compose up -d --build logical-review-backend
+```
+
+只修改前端代码或 `docker/nginx/default.conf`：
+
+```powershell
+docker compose up -d --build gateway
+```
+
+如果某个后端容器被重新创建后，网关仍然偶发 `502`，可以重新创建网关，让 Nginx 重新解析上游容器地址：
+
+```powershell
+docker compose up -d --force-recreate gateway
+```
+
+清空所有 Compose 数据卷并重新初始化数据库：
+
+```powershell
 docker compose down -v
+docker compose up -d --build
 ```
 
-`down -v` 会删除数据，仅用于测试环境重置。
+注意：`down -v` 会删除 PostgreSQL、Redis、MinIO 的持久化数据，只适合开发环境重置。
 
-## 三、当前平台反代路径
+## 数据库初始化逻辑
 
-配置文件：
+当前 Compose 将 `docker/db/init.sql` 挂载到 PostgreSQL 官方镜像的初始化目录：
 
-```text
-docker/nginx/default.conf
+```yaml
+./docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
 ```
 
-当前路径关系：
+这意味着：
 
-| 平台路径 | 反代到 |
+- 第一次创建 `postgres-data` 数据卷时，PostgreSQL 会自动导入 `docker/db/init.sql`。
+- 后续 `docker compose up -d` 不会重复导入该脚本。
+- 新机器部署时，只要使用空数据卷启动，应用卡片、账号、基础表结构会自动初始化。
+- 如果机器上已有旧的、不完整的数据卷，初始化脚本不会覆盖它，可能出现缺字段、缺表、应用卡片为空等问题。
+
+开发环境可以用以下命令重置为全新数据库：
+
+```powershell
+docker compose down -v
+docker compose up -d --build
+```
+
+生产或需要保留数据的环境，不要直接 `down -v`，应编写迁移 SQL 修复旧数据结构。
+
+## 网关反代路径
+
+当前 `docker/nginx/default.conf` 中已经配置了以下路径：
+
+| 浏览器路径 | 转发目标 |
 | --- | --- |
-| `/` | 前端 `portal/dist` |
+| `/` | 前端静态页面，找不到文件时回退到 `index.html` |
 | `/portal/` | `portal-backend:8011` |
 | `/circuitreview/` | `circuit-review-backend:8012` |
 | `/sourcecodereview/` | `sourcecode-review-backend:8013` |
 | `/logicreview/` | `logical-review-backend:8014` |
 | `/sso/` | `sso-server:9091` |
 
-这些 `proxy_pass` 后面不要加路径，也不要加尾部 `/`：
-
-```nginx
-proxy_pass http://portal_backend;
-```
-
-不要写成：
-
-```nginx
-proxy_pass http://portal_backend/;
-```
-
-原因是后端服务自己已经配置了 context-path，例如 `/portal`、`/circuitreview`。
-
-## 四、如何判断外部应用是否支持 `/xxx/` 子路径
-
-假设外部应用真实地址是：
+所以用户在浏览器中看到的域名、IP、端口可以保持一致，例如：
 
 ```text
-http://192.168.10.21:9000/
+http://localhost:18080/
+http://localhost:18080/sourcecodereview/...
+http://localhost:18080/circuitreview/...
 ```
 
-你希望平台路径是：
+前端页面不需要直接暴露每个 Java 后端端口。
 
-```text
-http://平台地址:8080/myapp/
+## 外部审查引擎配置
+
+三个审查后端还会调用外部审查引擎，这些引擎不在当前 Compose 内。配置在 `.env`：
+
+```env
+REVIEW_SERVICE_URL=host.docker.internal:38080
+CODE_REVIEW_SERVICE_URL=host.docker.internal:38081
+LOGIC_REVIEW_SERVICE_URL=host.docker.internal:38082
 ```
 
-按下面顺序检查。
+填写规则：
 
-### 方法 1：看应用前端构建配置
+- 只写 `host:port`，不要加 `http://`，因为后端配置会自动拼接协议。
+- 引擎跑在 Windows 宿主机上时，Docker 容器通常使用 `host.docker.internal:端口` 访问。
+- 引擎跑在局域网其他机器上时，填写 `IP:端口`，例如 `192.168.1.20:38080`。
+- 引擎也放进同一个 Compose 网络时，填写服务名和端口，例如 `review-engine:38080`。
 
-常见框架的配置项：
+在 Windows 上可以先验证端口是否可达：
 
-| 框架 | 常见配置 |
-| --- | --- |
-| Vite | `base: '/myapp/'` |
-| Vue CLI | `publicPath: '/myapp/'` |
-| React CRA | `homepage` 或 `PUBLIC_URL=/myapp` |
-| Next.js | `basePath: '/myapp'` |
-| Angular | `--base-href /myapp/`、`--deploy-url /myapp/` |
-
-如果应用明确配置了类似 `base/publicPath/basePath`，通常支持子路径。
-
-### 方法 2：用浏览器开发者工具看资源路径
-
-打开真实地址：
-
-```text
-http://192.168.10.21:9000/
+```powershell
+Test-NetConnection localhost -Port 38080
+Test-NetConnection localhost -Port 38081
+Test-NetConnection localhost -Port 38082
 ```
 
-按 F12 看 Network。重点看 JS、CSS、图片请求。
+如果这里不通，审查页面可以打开，但创建或执行审查任务时仍会失败。
 
-支持子路径的应用，资源通常能按 `/myapp/...` 加载，例如：
+## 如何判断外部应用是否支持 `/xxx/` 子路径
 
-```text
-/myapp/assets/index.js
-/myapp/static/css/app.css
-```
+把其他应用挂到统一网关下时，优先判断该应用能否在子路径运行，例如 `/myapp/`。
 
-不支持子路径的应用经常请求根路径资源：
+可以按以下方式检查：
 
-```text
-/assets/index.js
-/static/css/app.css
-/api/user
-```
+1. 查看外部应用前端构建配置，是否支持 `base`、`publicPath`、`homepage`、`baseHref`、`context-path` 等配置。
+2. 直接访问临时路径，例如 `http://localhost:18080/myapp/`，打开浏览器开发者工具，看 JS、CSS、图片接口是不是都从 `/myapp/` 下加载。
+3. 如果资源请求仍然写死为 `/assets/...`、`/api/...`，说明它大概率不支持直接挂子路径，除非修改该应用构建配置。
+4. 如果外部应用有后端，也要确认它的接口路径、Cookie Path、登录回调地址是否能配置子路径。
 
-如果它在 `/myapp/` 下仍然请求 `/assets/...` 或 `/api/...`，通常会和平台根路径冲突。
+支持子路径的应用可以挂到当前网关的 `/myapp/`。不支持子路径的应用，建议使用独立域名、独立端口，或只在 `pot_application.url` 中配置完整 URL。
 
-### 方法 3：临时加 Nginx location 测试
+## 新增反代应用的基本步骤
 
-在 `docker/nginx/default.conf` 里临时加：
+以新增一个应用 `/myapp/` 为例。
 
-```nginx
-location ^~ /myapp/ {
-    proxy_pass http://192.168.10.21:9000/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-}
-```
-
-重建或重启 gateway：
-
-```bash
-docker compose up -d --build gateway
-```
-
-访问：
-
-```text
-http://localhost:18080/myapp/
-```
-
-如果页面能打开、刷新不 404、控制台没有大量资源 404、登录/接口请求正常，基本支持。
-
-### 方法 4：直接访问子路径
-
-有些应用本身就能处理子路径。可以直接试：
-
-```text
-http://192.168.10.21:9000/myapp/
-```
-
-如果真实服务直接支持这个路径，反代会更简单。
-
-## 五、新增应用跳转的三种方案
-
-### 方案 A：当前 portal 内部已有页面
-
-适用场景：应用页面已经写在当前 `portal/src/views` 里，只是需要新增入口。
-
-修改位置：
-
-1. 门户后台“应用管理”新增应用，或直接改数据库表 `pot_application`。
-2. `url` 填 Vue Router 相对路径。
-
-示例：
-
-```text
-/circuitReviewHome
-/codeReviewHome
-/logicReviewHome
-/documentReview
-/sourceCodeDocumentReview
-/logicDocumentReview
-```
-
-不需要改 Nginx。
-
-浏览器地址示例：
-
-```text
-http://平台地址:8080/#/codeReviewHome
-```
-
-### 方案 B：外部应用支持 `/xxx/` 子路径
-
-适用场景：新应用独立部署、独立数据库，但可以运行在 `/myapp/` 这种路径下。
-
-修改 `docker/nginx/default.conf`：
+第一步，在 `docker/nginx/default.conf` 增加 location：
 
 ```nginx
 location = /myapp {
@@ -341,7 +232,7 @@ location = /myapp {
 }
 
 location ^~ /myapp/ {
-    proxy_pass http://192.168.10.21:9000/;
+    proxy_pass http://host.docker.internal:3000/;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -349,133 +240,76 @@ location ^~ /myapp/ {
 }
 ```
 
-修改门户应用配置：
+第二步，重建网关：
 
-```text
-pot_application.url = /myapp/
-```
-
-重启 gateway：
-
-```bash
+```powershell
 docker compose up -d --build gateway
 ```
 
-访问效果：
+第三步，在 `pot_application` 中新增或修改应用卡片，让 `url` 指向 `/myapp/`。可以通过系统管理页面维护，也可以执行 SQL。
+
+更多细节见 [新增反代应用卡片.md](新增反代应用卡片.md)。
+
+## 常见问题
+
+### 访问 `http://localhost:8080/` 返回 401
+
+`8080` 通常不是当前网关端口，可能访问到了某个后端接口或其他服务。当前统一入口是：
 
 ```text
-http://平台地址:8080/myapp/
+http://localhost:18080/
 ```
 
-地址栏仍然是平台地址。
+如果修改过 `.env` 的 `GATEWAY_PORT`，以实际值为准。
 
-### 方案 C：外部应用不支持 `/xxx/` 子路径
+### 应用卡片或顶部下拉为空
 
-适用场景：老系统或第三方系统只支持部署在 `/`，静态资源、接口都写死为根路径。
+重点检查：
 
-推荐用子域名：
+- PostgreSQL 是否使用了旧的、不完整的数据卷。
+- `pot_application` 是否有数据。
+- `pot_application.module` 是否属于门户代码支持的模块，例如 `设计研发`、`运营管理`、`生产制造`、`算力资源`。
+- `status` 是否为 `1`。
 
-```text
-http://myapp.platform.local/
+开发环境可以通过 `docker compose down -v` 清空旧卷后重新启动，让 `docker/db/init.sql` 自动导入基线数据。
+
+### 页面弹出橙色空报错框
+
+通常是前端请求失败但后端响应体没有可展示的错误信息。先看网关和对应后端日志：
+
+```powershell
+docker compose logs gateway --tail 100
+docker compose logs sourcecode-review-backend --tail 100
+docker compose logs circuit-review-backend --tail 100
+docker compose logs logical-review-backend --tail 100
 ```
 
-新增一个 Nginx server：
+如果是 `502`，通常说明目标后端未启动、启动失败、或网关缓存了已重建容器的旧地址。可先确认：
 
-```nginx
-server {
-    listen 80;
-    server_name myapp.platform.local;
-
-    client_max_body_size 1024m;
-
-    location / {
-        proxy_pass http://192.168.10.21:9000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
+```powershell
+docker compose ps
+docker compose up -d --force-recreate gateway
 ```
 
-门户应用配置：
+### 修改 `default.conf` 或 `pot_application` 后要不要重新构建镜像
 
-```text
-pot_application.url = http://myapp.platform.local/
+- 修改 `docker/nginx/default.conf`：需要重建 `gateway` 镜像。
+- 修改 `pot_application` 数据：不需要重建镜像，刷新页面或重新登录即可。
+- 修改 `.env`：不需要重建镜像，但需要重新创建相关容器。
+- 修改 Java 或前端代码：需要重建对应镜像。
+
+### Docker Desktop 里镜像显示 `In use`
+
+`In use` 表示有容器引用了该镜像，不代表容器一定在运行。可以用以下命令看运行中的容器：
+
+```powershell
+docker ps
 ```
 
-这种方式会打开新域名，但仍在统一域名体系里。对不支持子路径的应用最稳。
+查看所有容器，包括已停止容器：
 
-如果必须让地址栏保持 `平台地址/myapp/`，需要对该应用的 HTML、JS、CSS、接口路径做重写，维护成本高，不建议作为默认方案。
-
-## 六、门户应用入口在哪里配置
-
-门户前端应用列表来自：
-
-```text
-GET /portal/v1/applications
+```powershell
+docker ps -a
 ```
 
-对应数据库表：
-
-```text
-pot_application
-```
-
-关键字段：
-
-| 字段 | 说明 |
-| --- | --- |
-| `name` | 应用名称 |
-| `module` | 所属板块 |
-| `icon` | 应用图标 |
-| `status` | 状态，通常 `1` 表示可用 |
-| `url` | 应用入口地址 |
-
-前端点击逻辑：
-
-```text
-url 以 http:// 或 https:// 开头 -> window.open 打开外部地址
-url 是 /xxx 这种相对路径 -> Vue Router 在当前平台内跳转
-```
-
-因此：
-
-| 目标 | `pot_application.url` 应填 |
-| --- | --- |
-| 当前 portal 内部页面 | `/codeReviewHome` |
-| 通过平台 Nginx 子路径反代 | `/myapp/` |
-| 外部系统直接打开 | `http://192.168.10.21:9000/` |
-| 子域名反代 | `http://myapp.platform.local/` |
-
-## 七、常见问题
-
-### 1. 为什么不自动导入 init.sql
-
-因为当前 `init.sql` 中有 `DROP TABLE IF EXISTS`。自动挂载到 PostgreSQL 初始化目录适合全新空库，但对已有数据有风险。
-
-### 2. 为什么前端生产环境不写后端 IP
-
-`portal/.env.production` 中：
-
-```env
-VITE_APP_API_BASE_URL=''
-```
-
-表示接口请求使用相对路径，例如 `/portal/...`、`/circuitreview/...`。这样才能通过同一个 Nginx 入口转发，保持浏览器地址一致。
-
-### 3. 修改 Nginx 配置后怎么生效
-
-如果只改了 `docker/nginx/default.conf`：
-
-```bash
-docker compose up -d --build gateway
-```
-
-或者：
-
-```bash
-docker compose restart gateway
-```
-
-如果 Nginx 配置被 bake 进镜像，推荐用 `--build gateway`。
+如果 `docker compose down` 后仍看到镜像 `In use`，通常是因为存在已停止容器、其他 Compose 项目或手动创建的容器引用了它。

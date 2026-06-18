@@ -1,0 +1,56 @@
+{
+  //项目的运行时期望、JavaScript 的发出方式和位置以及与现有 JavaScript 代码的集成级别
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    //指定ECMAScript目标版本 
+    "target": "esnext",
+    //此标志用作迁移到即将推出的类字段标准版本的一部分
+    "useDefineForClassFields": true,
+    //指定编译后代码使用的模块化规范
+    "module": "esnext",
+    //指定模块解析策略，node或classic
+    "moduleResolution": "node",
+    // 启用所有严格类型检查选项。
+    // 启用 --strict相当于启用 --noImplicitAny, --noImplicitThis, --alwaysStrict， 
+    // --strictNullChecks和 --strictFunctionTypes和--strictPropertyInitialization。
+    "strict": true,
+    "allowJs": true,
+    // "strictFunctionTypes": false, 
+    //JSX代码生成用于的开发环境
+    "jsx": "preserve",
+    //sourceMap
+    "sourceMap": true,
+    "noImplicitAny": false,
+    //resolveJsonModule
+    "resolveJsonModule": true,
+    //是否通过为所有导入模块创建命名空间对象，允许CommonJS和ES模块之间的互操作性，开启改选项时，也自动开启allowSyntheticDefaultImports选项
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    //指定项目运行时使用的库
+    "lib": [
+      "esnext",
+      "dom"
+    ],
+    //用于设置模块名称基于baseUrl的路径映射关系
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  },
+  //指定被编译文件所在的目录
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "auto-imports.d.ts",
+    "components.d.ts"
+, "src/views/circuitReview/feedback/Feedback.vue-bak260121_logic"  ],
+  //项目引用，是 TS 3.0 中的一项新功能，它允许将 TS 程序组织成更小的部分
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
+}

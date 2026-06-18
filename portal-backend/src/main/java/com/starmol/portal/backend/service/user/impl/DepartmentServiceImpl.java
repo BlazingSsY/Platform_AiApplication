@@ -275,7 +275,7 @@ public class DepartmentServiceImpl extends BaseCascadeServiceImpl<DepartmentMapp
             return departmentList.stream().map(department -> objectMapper.convertValue(department, SimpleItemVO.class)).toList();
         }
         else {
-            List<Department> departmentList = this.list(Wrappers.<Department>lambdaQuery().select(Department::getId, Department::getName).like(Objects.nonNull(departmentId), Department::getId, departmentId).orderBy(true,true, Department::getName));
+            List<Department> departmentList = this.list(Wrappers.<Department>lambdaQuery().select(Department::getId, Department::getName).eq(Objects.nonNull(departmentId), Department::getId, departmentId).orderBy(true,true, Department::getName));
             List<SimpleItemVO> simpleItemVOList = new ArrayList<>();
             for (Department department : departmentList) {
                 simpleItemVOList.add(objectMapper.convertValue(department, SimpleItemVO.class));

@@ -1,0 +1,8 @@
+minio:
+  endpoint: http://${MINIO_SERVER:100.64.0.3:19000} #Minio服务所在地址
+  bucket-name: ${MINIO_BUCKET:circuit-review} #存储桶名称
+  access-key: ${MINIO_ACCOUNT:minio} #访问的key
+  secret-key: ${MINIO_SECURITY:Timeforward00@} #访问的秘钥
+multi:
+  digest-type: SHA-256
+  multi-hash-type: sha2_256

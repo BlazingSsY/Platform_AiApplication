@@ -1,0 +1,147 @@
+server:
+  port: ${SERVER_PORT:8011}
+  tomcat:
+    max-connections: ${MAX_CONNECTION:10000}
+    max-threads: ${MAX_THREAD:500}
+    min-spare-threads: ${MIN_THREAD:100}
+    connection-timeout: ${CONNECTION_TIMEOUT:300000}
+  servlet:
+    context-path: /circuitreview
+springdoc:
+  api-docs:
+    #是否开启文档功能
+    enabled: on
+    #swagger后端请求地址
+    path: /api-docs
+  swagger-ui:
+    #自定义swagger前端请求路径，输入http://127.0.0.1:8001/baseservice/swagger-ui会自动重定向到swagger页面
+    path: /swagger-ui
+  #包扫描路径
+  packages-to-scan: com.starmol.circuitreview.backend.controller,com.starmol.circuitreview.backend.dto,com.starmol.circuitreview.backend.model
+
+spring:
+  application:
+    name: circuitreview-backend
+  profiles:
+    include: minio
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  servlet:
+    multipart:
+      # 单个文件的最大大小
+      max-file-size: 1024MB
+      # 整个请求的最大大小
+      max-request-size: 1024MB
+  jackson:
+    default-property-inclusion: NON_NULL
+    time-zone: ${user.timezone:GMT+8}
+    date-format: yyyy-MM-dd HH:mm:ss
+    generator:
+      escape-non-ascii: true
+  datasource:
+    name: circuitreview-db
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:postgresql://${DLSC_DB_HOST:100.64.0.3:15432}/${DLSC_DB_NAME:dlsc}?useUnicode=true&characterEncoding=utf8
+    driver-class-name: org.postgresql.Driver
+    username: ${DLSC_DB_USERNAME:root}
+    password: ${DLSC_DB_PASSWORD:Yun123456!}
+    hikari:
+      minimum-idle: ${DLSC_DB_POOL_MIN:1}
+      maximum-pool-size: ${DLSC_DB_POOL_MAX:2}
+      auto-commit: true
+      idle-timeout: 30000
+      max-lifetime: 500000
+      connection-timeout: 30000
+      connection-test-query: SELECT 1
+
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/*.xml
+  global-config:
+    db-config:
+      # 主键策略
+      id-type: assign_id
+      # 表名前缀
+      #table-prefix: t
+      # 表名是否使用下划线间隔，默认：是
+      table-underline: true
+      logic-not-delete-value: 0
+      logic-delete-value: 1
+  # 驼峰转下划线
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+    default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
+  ignore-table-name:
+
+logging:
+  level:
+    root: INFO
+    com.starmol.circuitreview: INFO
+    # Feign 客户端完整日志配置
+    # 启用 Feign 客户端的详细日志
+    feign:
+      client: DEBUG
+    # 详细的 Feign 日志记录器
+    com.starmol.circuitreview.backend.service.circuitreview.feign: DEBUG
+  file:
+    name: logs/circuitreview-backend.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  logback:
+    rollingpolicy:
+      # 日志文件最大大小
+      max-file-size: 100MB
+      # 保留的日志文件天数（14天 = 2周）
+      max-history: 14
+      # 所有日志文件的总大小上限
+      total-size-cap: 3GB
+      # 日志文件名模式（按天滚动）
+      file-name-pattern: logs/circuitreview-backend.%d{yyyy-MM-dd}.%i.log
+
+security:
+  jwt:
+    token-expiration-time: ${TOKEN_EXPIRE_TIME:600}
+    refresh-token-exp-time: ${TOKEN_EXPIRE_REFRESH_TIME:2}
+    token-signing-key: ${TOKEN_SIGNING_KEY:YWlyX3NlY3JldEtleQ==}
+
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  secure: false
+
+storage:
+  local:
+    enable: ${STORAGE_LOCAL_ENABLE:false}
+    path: ${STORAGE_LOCAL_PATH:D:/uploads/}
+    job-path: ${STORAGE_LOCAL_JOB_PATH:D:/uploads/}
+  minio:
+    enable: ${STORAGE_MINIO_ENABLE:true}
+
+review:
+  service:
+    url: http://${REVIEW_SERVICE_URL:100.64.0.3:38080} # 电路审查,实际python服务地址
+
+user:
+  service:
+    url: http://${USER_SERVICE_URL:100.64.0.3:8011}
+
+deployment:
+  type: ${DEPLOYMENT_TYPE:1} # 部署类型。0：机载；1：631
+  circuit-service-url: http://${CIRCUIT_SERVICE_URL:100.64.0.3:18011}
+
+migration:
+  sql:
+    path: db/migration
+
+log-file-path: ${LOG_FILE_PATH:/logs/circuitreview-backend.log}
+
+feign:
+  client:
+    config:
+      default:
+        connect-timeout: 60000 # 连接超时60秒
+        read-timeout: 300000 # 读取超时300秒

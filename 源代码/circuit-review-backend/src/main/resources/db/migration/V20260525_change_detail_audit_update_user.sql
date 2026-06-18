@@ -1,0 +1,1 @@
+UPDATE dlsc_review_result_detail_audit SET update_user = 100000000000001 WHERE audit_type = 4 AND status IN (2,3) AND update_user != 100000000000001;

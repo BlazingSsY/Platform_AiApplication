@@ -61,6 +61,12 @@ services:
       - .env
     environment:
       SERVER_PORT: 8011
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8011/portal/v1/applications || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 90s
     depends_on:
       postgres:
         condition: service_healthy
@@ -79,6 +85,12 @@ services:
       - .env
     environment:
       SERVER_PORT: 8012
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8012/circuitreview/v1/circuit-review/deployment-type || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 90s
     depends_on:
       postgres:
         condition: service_healthy
@@ -99,6 +111,12 @@ services:
       - .env
     environment:
       SERVER_PORT: 8013
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8013/sourcecodereview/swagger-ui/index.html || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 90s
     depends_on:
       postgres:
         condition: service_healthy
@@ -119,6 +137,12 @@ services:
       - .env
     environment:
       SERVER_PORT: 8014
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8014/logicreview/swagger-ui/index.html || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 90s
     depends_on:
       postgres:
         condition: service_healthy
@@ -137,6 +161,12 @@ services:
     container_name: daip-sso-server
     env_file:
       - .env
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:19091/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 90s
     depends_on:
       redis:
         condition: service_healthy
@@ -153,15 +183,15 @@ services:
       - "${GATEWAY_PORT:-18080}:80"
     depends_on:
       portal-backend:
-        condition: service_started
+        condition: service_healthy
       circuit-review-backend:
-        condition: service_started
+        condition: service_healthy
       sourcecode-review-backend:
-        condition: service_started
+        condition: service_healthy
       logical-review-backend:
-        condition: service_started
+        condition: service_healthy
       sso-server:
-        condition: service_started
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
