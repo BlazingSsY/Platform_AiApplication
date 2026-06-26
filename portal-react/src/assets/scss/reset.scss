@@ -1,0 +1,79 @@
+
+html, body, div, h1, h2, h3, h4, h5, h6, ul, ol, dl, li, dt, dd, p, blockquote,
+pre, form, fieldset, table, th, td, header, section, footer{
+  border: none;
+  font-family: Macrosoft YaHei, Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 15px;
+  margin: 0;
+  padding: 0;
+  // -moz-user-select: none;
+  // -khtml-user-select: none;
+  // user-select: none;
+  box-sizing: border-box;
+}
+@font-face {
+  font-family: '优设标题';
+  src: url(../font/YouSheBiaoTiHei-2.ttf);
+  font-style: normal;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+address, caption, cite, code, dfn, em, strong, th, var {
+  font-style: normal;
+  font-weight: normal;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+input::-ms-clear {
+  display: none;
+}
+
+input::-ms-reveal {
+  display: none;
+}
+
+input {
+  -webkit-appearance: none;
+  margin: 0;
+  outline: none;
+  padding: 0;
+}
+
+input[type=submit], input[type=button] {
+  cursor: pointer;
+}
+
+textarea{
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+button[disabled], input[disabled] {
+  cursor: default;
+}
+
+img {
+  border: none;
+}
+
+ul, ol, li {
+  list-style-type: none;
+}
+
+#app {
+  height: 100%;
+  width: 100%;
+  background-color:  #fff;
+}

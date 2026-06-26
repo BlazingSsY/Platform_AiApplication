@@ -1,6 +1,6 @@
 # Docker 启动与应用反代配置说明
 
-本文档按当前项目代码整理，适用于使用 Docker Compose 启动门户、后端服务、PostgreSQL、Redis、MinIO 和 Nginx 网关。
+本文档按当前项目代码整理，适用于使用 Docker Compose 启动门户、后端服务、PostgreSQL、Redis、MinIO 和 Nginx 网关，并说明系统启动顺序、页面加载逻辑、数据库初始化与日常维护。
 
 ## 先看结论
 
@@ -20,10 +20,30 @@
 | `circuit-review-backend` | `daip-circuit-review-backend` | 电路审查后端 | `8012` | 经 `/circuitreview/` 反代 |
 | `sourcecode-review-backend` | `daip-sourcecode-review-backend` | 软件代码审查后端 | `8013` | 经 `/sourcecodereview/` 反代 |
 | `logical-review-backend` | `daip-logical-review-backend` | 逻辑审查后端 | `8014` | 经 `/logicreview/` 反代 |
-| `sso-server` | `daip-sso-server` | 单点登录服务 | `9091` | 经 `/sso/` 反代 |
+| `sso-server` | `daip-sso-server` | 单点登录服务，依赖 Redis | `9091` | 经 `/sso/` 反代 |
 | `postgres` | `daip-postgres` | PostgreSQL 数据库 | `5432` | `localhost:15432` |
 | `redis` | `daip-redis` | Redis，主要供 SSO 使用 | `6379` | `localhost:6379` |
 | `minio` | `daip-minio` | 对象存储 | `9000/9001` | `localhost:19000/19001` |
+
+前端为 Vue/Vite 项目，构建后由 `gateway`（Nginx）提供静态页面。
+
+## 启动流程
+
+执行：
+
+```powershell
+docker compose up -d --build
+```
+
+整体流程如下：
+
+1. Docker Compose 读取根目录 `.env`。
+2. `postgres`、`redis`、`minio` 启动。
+3. 如果 `postgres-data` 数据卷为空，PostgreSQL 自动执行 `docker/db/init.sql`。
+4. 各 Java 后端服务启动，并读取 `.env` 中的数据库、MinIO、Redis、外部审查引擎配置。
+5. `gateway` 启动，加载前端构建产物和 `docker/nginx/default.conf`。
+6. 用户访问 `http://localhost:18080/`，浏览器加载门户页面。
+7. 前端通过 `/portal/`、`/sourcecodereview/`、`/circuitreview/`、`/logicreview/`、`/sso/` 调用后端。
 
 ## 首次启动
 
@@ -133,6 +153,31 @@ docker compose up -d --build
 
 注意：`down -v` 会删除 PostgreSQL、Redis、MinIO 的持久化数据，只适合开发环境重置。
 
+## 页面与应用卡片加载逻辑
+
+门户首页、顶部菜单、侧边菜单使用同一套应用数据，来自：
+
+```text
+GET /portal/v1/applications
+```
+
+后端读取数据库表 `pot_application`，按模块和 `sequence` 排序后返回。关键规则：
+
+- `status = 1` 表示应用已上线。
+- `is_delete = 0` 表示未删除。
+- `module` 决定应用分组。
+- `sequence` 决定排序，越小越靠前。
+- `url` 决定点击后进入站内路由、反代路径或完整外部地址（跳转规则见
+  [新增反代应用卡片.md](新增反代应用卡片.md)）。
+
+当前模块顺序：
+
+```text
+设计研发 -> 运营管理 -> 生产制造 -> 算力资源
+```
+
+如果首页卡片或顶部下拉为空，优先检查 `pot_application` 数据和 PostgreSQL 数据卷是否为旧版本。
+
 ## 数据库初始化逻辑
 
 当前 Compose 将 `docker/db/init.sql` 挂载到 PostgreSQL 官方镜像的初始化目录：
@@ -148,6 +193,25 @@ docker compose up -d --build
 - 新机器部署时，只要使用空数据卷启动，应用卡片、账号、基础表结构会自动初始化。
 - 如果机器上已有旧的、不完整的数据卷，初始化脚本不会覆盖它，可能出现缺字段、缺表、应用卡片为空等问题。
 
+`docker/db/init.sql` 是当前 Compose 使用的合并基线，包含：
+
+- 用户、角色、权限、部门等门户基础表。
+- 应用卡片表 `pot_application` 和基础应用数据。
+- SSO 相关表，例如 `oauth_client`。
+- 电路审查、软件代码审查、逻辑审查相关表。
+- 文件、审查结果、审查明细、问题、反馈、经验分享等业务表。
+
+正常 Docker 部署不需要手动导入各模块目录下的旧 `init.sql`。
+
+数据卷与初始化行为对照：
+
+| 场景 | 行为 |
+| --- | --- |
+| 新机器首次启动 | 自动执行 `docker/db/init.sql` |
+| 执行 `docker compose down` 后再启动 | 数据保留，不会重新导入 |
+| 执行 `docker compose down -v` 后再启动 | 数据卷被删除，会重新导入 |
+| 已有旧数据卷但缺表缺字段 | 不会自动修复，需要迁移或重置数据卷 |
+
 开发环境可以用以下命令重置为全新数据库：
 
 ```powershell
@@ -156,6 +220,28 @@ docker compose up -d --build
 ```
 
 生产或需要保留数据的环境，不要直接 `down -v`，应编写迁移 SQL 修复旧数据结构。
+
+## 数据库支持情况
+
+当前 Docker 部署默认使用 PostgreSQL 14：
+
+```yaml
+postgres:
+  image: postgres:14-alpine
+```
+
+当前已按 PostgreSQL 路径整理和验证。项目中部分代码或历史脚本可能保留过其他数据库适配痕迹，但当前 Docker Compose 没有提供达梦 DM8 等数据库的完整可运行配置。
+
+如果要切换到其他数据库，需要至少处理：
+
+- JDBC 驱动和 Maven 依赖。
+- Spring 数据源配置。
+- MyBatis Plus 方言和分页配置。
+- SQL 类型、函数、序列、自增策略差异。
+- `docker/db/init.sql` 的完整迁移。
+- 所有登录、应用卡片、审查任务和管理功能回归测试。
+
+在完成上述工作前，不建议把当前 Docker 部署直接切换到非 PostgreSQL 数据库。
 
 ## 网关反代路径
 
@@ -178,7 +264,7 @@ http://localhost:18080/sourcecodereview/...
 http://localhost:18080/circuitreview/...
 ```
 
-前端页面不需要直接暴露每个 Java 后端端口。
+这也是平台主页和跳转后的各审查页面能显示同一个 IP 和端口的原因：浏览器只访问 Nginx 网关，网关在内部转发到不同服务，前端页面不需要直接暴露每个 Java 后端端口。
 
 ## 外部审查引擎配置
 
@@ -248,7 +334,29 @@ docker compose up -d --build gateway
 
 第三步，在 `pot_application` 中新增或修改应用卡片，让 `url` 指向 `/myapp/`。可以通过系统管理页面维护，也可以执行 SQL。
 
-更多细节见 [新增反代应用卡片.md](新增反代应用卡片.md)。
+更多细节见 [新增反代应用卡片.md](新增反代应用卡片.md)；子路径反代的逐文件分步操作见 [方案二-子路径反代接入应用详解.md](方案二-子路径反代接入应用详解.md)；接入原理与踩坑见 [子路径反代接入应用-原理与踩坑.md](子路径反代接入应用-原理与踩坑.md)。
+
+## 常用维护命令
+
+查看容器状态：
+
+```powershell
+docker compose ps
+```
+
+查看全部服务日志：
+
+```powershell
+docker compose logs --tail 100
+```
+
+查看指定服务日志：
+
+```powershell
+docker compose logs portal-backend --tail 100
+docker compose logs sourcecode-review-backend --tail 100
+docker compose logs gateway --tail 100
+```
 
 ## 常见问题
 
@@ -273,11 +381,23 @@ http://localhost:18080/
 
 开发环境可以通过 `docker compose down -v` 清空旧卷后重新启动，让 `docker/db/init.sql` 自动导入基线数据。
 
-### 页面弹出橙色空报错框
+### 登录失败但页面不显示明确错误
+
+先检查门户后端和网关日志：
+
+```powershell
+docker compose logs portal-backend --tail 100
+docker compose logs gateway --tail 100
+```
+
+同时确认数据库中用户、角色、权限表已正确初始化。
+
+### 页面弹出橙色空报错框 / 软件代码审查页面橙色空错误
 
 通常是前端请求失败但后端响应体没有可展示的错误信息。先看网关和对应后端日志：
 
 ```powershell
+docker compose ps
 docker compose logs gateway --tail 100
 docker compose logs sourcecode-review-backend --tail 100
 docker compose logs circuit-review-backend --tail 100
@@ -288,6 +408,22 @@ docker compose logs logical-review-backend --tail 100
 
 ```powershell
 docker compose ps
+docker compose up -d --force-recreate gateway
+```
+
+如果后端日志中出现缺表或缺字段，说明当前 PostgreSQL 数据卷不是最新基线。开发环境建议重置数据卷；生产环境应按缺失对象补迁移 SQL。
+
+### 左侧菜单报 `operator does not exist: bigint ~~ character varying`
+
+这是 PostgreSQL 下把数字字段当作字符串 `LIKE` 查询造成的问题。当前代码已将部门子级查询改为等值匹配。修改后需要重建门户后端：
+
+```powershell
+docker compose up -d --build portal-backend
+```
+
+如果网关随后出现 `502`，再重新创建网关：
+
+```powershell
 docker compose up -d --force-recreate gateway
 ```
 
@@ -313,3 +449,9 @@ docker ps -a
 ```
 
 如果 `docker compose down` 后仍看到镜像 `In use`，通常是因为存在已停止容器、其他 Compose 项目或手动创建的容器引用了它。
+
+## 关联文档
+
+- 新增反代应用卡片（三种方案总览）：[新增反代应用卡片.md](新增反代应用卡片.md)
+- 子路径反代逐文件分步：[方案二-子路径反代接入应用详解.md](方案二-子路径反代接入应用详解.md)
+- 子路径反代原理与踩坑：[子路径反代接入应用-原理与踩坑.md](子路径反代接入应用-原理与踩坑.md)

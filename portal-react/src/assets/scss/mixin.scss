@@ -1,0 +1,68 @@
+// base color
+$white: #FFFFFF;
+$project_them: #4c8cff;
+
+//字体颜色            
+$placeholder_C: #babdc2; //控件提示文字颜色
+$title_C: #262626; //标题颜色
+$normal_C: #595959; //正文文字，表格内容、普通蚊子
+$des_C: #999999; //文字提示内容 本案号、次要文字
+$formLabel_C: #262626; //用于输入框选择框及icon、置灰文字与button色
+$disable_C: #d9d9d9; //置灰文字
+$border_C: #e2e5ed; //边框颜色
+$nav_c: #bababa; //导航字体颜色
+
+//状态色
+$noSubmit_C: #BFBFBF; //未提交、未用、输入框icon颜色
+$runIng_C: #5D78ff; //运行中、再用
+$pass_C: #61C200; //通过、联通
+$reject_C: #DF1616; //驳回、异常
+$reviewIng_C: #FFC718; //审核中
+
+//状态色
+$start-on: rgb(10,178,234); // 启动中
+$start-succ: rgb(56,206,183); // 已启动
+$start-error: rgb(255,174,0); // 启动失败
+$start-off: rgb(251,49,120); // 未启动
+$start-stop:rgb(166,166,166); // 已停用
+
+//背景色
+$tableHeader_B: #F1F1F1; //表格标题栏底色、分割线颜色
+$disable_B: #FAFAFA; //用于不可操作内容输入框底色、详情内表格表头颜色
+$tableHover_B: #FBFCFE; //表格hover 颜色
+$nav_B: #393939; // 右侧导航背景
+$body_B: #030303;//页面背景
+
+//字体大小
+$title_S: 20px; //网页标题
+$normal_S: 14px; //表格标题，描述、单框标题、控件、。。。
+$tab_S: 17px; //  标签内字体大小
+
+//文字行高变量
+$title_L: 24px; //网页标题
+$normal_L: 22px; //表格标题，描述、单框标题、控件、。。。
+$tab_L: 18px; //  标签内字体大小
+
+//圆角
+$radius2: 2; //浮窗圆角
+$radius4: 4; //button、input、text 圆角
+
+%relative {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+//阴影效果
+@mixin shadow($x,$y,$blurry,$spread ,$color) {
+  -moz-box-shadow: $x $y $blurry $spread $color;
+  -webkit-box-shadow: $x $y $blurry $spread $color;
+  box-shadow: $x $y $blurry $spread $color;
+}
+
+//设置宽高
+@mixin wh($width, $height) {
+  width: $width;
+  height: $height;
+}
+
